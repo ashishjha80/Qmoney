@@ -1,0 +1,4 @@
+curl -X GET "https://api.tiingo.com/tiingo/daily/googl/prices?startDate=2019-01-02&endDate=2019-01-19&token=35388790d5696fd71ef95e094c51f0906bd7106b"
+curl -X GET "https://api.tiingo.com/tiingo/daily/aapl/prices?startDate=2019-01-02&endDate=2019-01-19&token=35388790d5696fd71ef95e094c51f0906bd7106b"
+curl -X GET "https://api.tiingo.com/tiingo/daily/msft/prices?startDate=2019-01-02&endDate=2019-01-19&token=35388790d5696fd71ef95e094c51f0906bd7106b"
+curl -H "Authorization: Token 35388790d5696fd71ef95e094c51f0906bd7106b" https://api.tiingo.com/tiingo/daily/msft/prices?startDate=2019-01-02&endDate=2019-01-19
