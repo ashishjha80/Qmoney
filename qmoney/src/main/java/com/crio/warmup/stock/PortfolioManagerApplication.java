@@ -1,6 +1,6 @@
 package com.crio.warmup.stock;
 
-//import com.crio.warmup.stock.dto.AnnualizedReturn;
+import com.crio.warmup.stock.dto.AnnualizedReturn;
 import com.crio.warmup.stock.dto.PortfolioTrade;
 import com.crio.warmup.stock.dto.TiingoCandle;
 import com.crio.warmup.stock.dto.TotalReturnsDto;
@@ -14,8 +14,9 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 //import java.nio.file.Files;
 import java.nio.file.Paths;
-//import java.time.LocalDate;
-//import java.time.temporal.ChronoUnit;
+import java.time.LocalDate;
+//import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,6 +35,64 @@ import org.springframework.web.client.RestTemplate;
 
 public class PortfolioManagerApplication {
   
+  // TODO: CRIO_TASK_MODULE_CALCULATIONS
+  //  Now that you have the list of PortfolioTrade and their data, calculate annualized returns
+  //  for the stocks provided in the Json.
+  //  Use the function you just wrote #calculateAnnualizedReturns.
+  //  Return the list of AnnualizedReturns sorted by annualizedReturns in descending order.
+
+  // Note:
+  // 1. You may need to copy relevant code from #mainReadQuotes to parse the Json.
+  // 2. Remember to get the latest quotes from Tiingo API.
+
+  static class SortListInDescending implements Comparator<AnnualizedReturn>,Serializable {
+    public int compare(AnnualizedReturn m1, AnnualizedReturn m2) {
+      return (int) (m2.getAnnualizedReturn() - m1.getAnnualizedReturn());
+    }
+  }
+
+  public static List<AnnualizedReturn> mainCalculateSingleReturn(String[] args)
+      throws IOException, URISyntaxException {
+    File tradesFile = resolveFileFromResources(args[0]);
+    ObjectMapper objectmapper = getObjectMapper();
+    PortfolioTrade[] alltrades = objectmapper.readValue(tradesFile, PortfolioTrade[].class);
+    //ArrayList<TotalReturnsDto> priceOnendDate = new ArrayList<>();
+    List<AnnualizedReturn> annualizedReturns = new ArrayList<>();
+    for (PortfolioTrade trade:alltrades) {
+      List<TiingoCandle> collection = resultFromApi(trade, args);
+      int n = collection.size();
+      Double close = collection.get(n - 1).getClose();
+      annualizedReturns.add(calculateAnnualizedReturns(collection.get(n - 1).getDate(),
+              trade, collection.get(0).getOpen(), close));
+      
+          
+    }
+    Collections.sort(annualizedReturns,new SortListInDescending());
+    return annualizedReturns;
+  }
+
+  // TODO: CRIO_TASK_MODULE_CALCULATIONS
+  //  Return the populated list of AnnualizedReturn for all stocks.
+  //  Annualized returns should be calculated in two steps:
+  //   1. Calculate totalReturn = (sell_value - buy_value) / buy_value.
+  //      1.1 Store the same as totalReturns
+  //   2. Calculate extrapolated annualized returns by scaling the same in years span.
+  //      The formula is:
+  //      annualized_returns = (1 + total_returns) ^ (1 / total_num_years) - 1
+  //      2.1 Store the same as annualized_returns
+  //  Test the same using below specified command. The build should be successful.
+  //     ./gradlew test --tests PortfolioManagerApplicationTest.testCalculateAnnualizedReturn
+
+  public static AnnualizedReturn calculateAnnualizedReturns(LocalDate endDate,
+      PortfolioTrade trade, Double buyPrice, Double sellPrice) {
+    Double totalReturns = (sellPrice - buyPrice) / buyPrice;
+    long days = ChronoUnit.DAYS.between(trade.getPurchaseDate(), endDate);
+    Double years = (days / 365d);
+    Double annualizedReturns = Math.pow(1 + totalReturns, 1 / years) - 1;
+    return new AnnualizedReturn(trade.getSymbol(), annualizedReturns, totalReturns);
+  }
+
+
   // Note:
   // 1. You may need to copy relevant code from #mainReadQuotes to parse the Json.
   // 2. Remember to get the latest quotes from Tiingo API.
@@ -189,24 +248,13 @@ public class PortfolioManagerApplication {
   }
 
 
-  
-
-
-
-
-
-
-
-
-
-
   public static void main(String[] args) throws Exception {
     Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler());
     ThreadContext.put("runId", UUID.randomUUID().toString());
 
 
-    printJsonObject(mainReadQuotes(args));
 
+    printJsonObject(mainCalculateSingleReturn(args));
 
   }
 }

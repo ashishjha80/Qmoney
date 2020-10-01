@@ -241,6 +241,7 @@
     <module name="SuppressWarnings">
       <property name="id" value="checkstyle:suppresswarnings"/>
     </module>
+    <module name="FileContentsHolder"/>
   </module>
 
   <module name="SuppressWithNearbyCommentFilter"/>
