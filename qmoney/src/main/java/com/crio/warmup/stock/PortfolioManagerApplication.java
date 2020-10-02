@@ -45,9 +45,9 @@ public class PortfolioManagerApplication {
   // 1. You may need to copy relevant code from #mainReadQuotes to parse the Json.
   // 2. Remember to get the latest quotes from Tiingo API.
 
-  static class SortListInDescending implements Comparator<AnnualizedReturn>,Serializable {
+  static class SortByAnnualizedReturns implements Comparator<AnnualizedReturn>,Serializable {
     public int compare(AnnualizedReturn m1, AnnualizedReturn m2) {
-      return (int) (m2.getAnnualizedReturn() - m1.getAnnualizedReturn());
+      return (int) (m1.getAnnualizedReturn() - m2.getAnnualizedReturn());
     }
   }
 
@@ -67,7 +67,8 @@ public class PortfolioManagerApplication {
       
           
     }
-    Collections.sort(annualizedReturns,new SortListInDescending());
+    Comparator c = Collections.reverseOrder(new SortByAnnualizedReturns());
+    Collections.sort(annualizedReturns,c);
     return annualizedReturns;
   }
 
