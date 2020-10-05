@@ -45,7 +45,7 @@ public class PortfolioManagerApplication {
   // 1. You may need to copy relevant code from #mainReadQuotes to parse the Json.
   // 2. Remember to get the latest quotes from Tiingo API.
 
- 
+  
 
   public static List<AnnualizedReturn> mainCalculateSingleReturn(String[] args)
       throws IOException, URISyntaxException {
@@ -63,8 +63,7 @@ public class PortfolioManagerApplication {
       
           
     }
-    //Comparator c = Collections.reverseOrder(new SortByAnnualizedReturns());
-    //Collections.sort(annualizedReturns,c);
+    
     Collections.sort(annualizedReturns, 
             Comparator.comparing((AnnualizedReturn::getAnnualizedReturn)).reversed());
     return annualizedReturns;
