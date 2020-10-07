@@ -5,35 +5,53 @@ import com.crio.warmup.stock.dto.PortfolioTrade;
 import com.crio.warmup.stock.dto.TiingoCandle;
 import com.crio.warmup.stock.dto.TotalReturnsDto;
 import com.crio.warmup.stock.log.UncaughtExceptionHandler;
+import com.crio.warmup.stock.portfolio.PortfolioManager;
+import com.crio.warmup.stock.portfolio.PortfolioManagerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URISyntaxException;
-//import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-//import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-//import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-//import java.util.logging.Level;
 import java.util.logging.Logger;
-//import java.util.stream.Collectors;
-//import java.util.stream.Stream;
 import org.apache.logging.log4j.ThreadContext;
-//import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestTemplate;
 
 
 public class PortfolioManagerApplication {
+  
+  // TODO: CRIO_TASK_MODULE_REFACTOR
+  //  Once you are done with the implementation inside PortfolioManagerImpl and
+  //  PortfolioManagerFactory, create PortfolioManager using PortfolioManagerFactory.
+  //  Refer to the code from previous modules to get the List<PortfolioTrades> and endDate, and
+  //  call the newly implemented method in PortfolioManager to calculate the annualized returns.
+
+  // Note:
+  // Remember to confirm that you are getting same results for annualized returns as in Module 3.
+
+  public static List<AnnualizedReturn> mainCalculateReturnsAfterRefactor(String[] args)
+      throws Exception {
+    
+    File tradesFile = resolveFileFromResources(args[0]);
+    LocalDate endDate = LocalDate.parse(args[1]);
+    ObjectMapper objectMapper = getObjectMapper();
+    PortfolioTrade[] portfolioTrades = objectMapper.readValue(tradesFile, PortfolioTrade[].class);
+    RestTemplate restTemplate = new RestTemplate();
+    PortfolioManagerFactory portfolioManagerFactory = new PortfolioManagerFactory();
+    PortfolioManager portfolioManager = portfolioManagerFactory.getPortfolioManager(restTemplate);
+    return portfolioManager.calculateAnnualizedReturn(Arrays.asList(portfolioTrades), endDate);
+       
+  }
+  
   
   // TODO: CRIO_TASK_MODULE_CALCULATIONS
   //  Now that you have the list of PortfolioTrade and their data, calculate annualized returns
@@ -110,17 +128,13 @@ public class PortfolioManagerApplication {
   //    and deserialize the results in List<Candle>
 
   
-  static class SortByClosePrice implements Comparator<TotalReturnsDto>,Serializable {
-    public int compare(TotalReturnsDto m1, TotalReturnsDto m2) {
-      return (int) (m1.getClosingPrice() - m2.getClosingPrice());
-    }
-  }
+  
 
   public static List<TiingoCandle> resultFromApi(PortfolioTrade trade,String[] args) 
       throws IOException, URISyntaxException {
     ObjectMapper objectmapper = getObjectMapper();
     RestTemplate restTemplate = new RestTemplate();
-    String symbol = trade.getSymbol().toLowerCase();
+    String symbol = trade.getSymbol();
     String startDate = trade.getPurchaseDate().toString();
     String endDate = args[1];
     String token = "35388790d5696fd71ef95e094c51f0906bd7106b";
@@ -146,7 +160,8 @@ public class PortfolioManagerApplication {
       priceOnendDate.add(e);
       
     }
-    Collections.sort(priceOnendDate,new SortByClosePrice());
+    Collections.sort(priceOnendDate,
+            Comparator.comparing(TotalReturnsDto::getClosingPrice));
     List<String> sortedSymbols =  new ArrayList<>();
     for (int i = 0;i < priceOnendDate.size();i++) {
       sortedSymbols.add(priceOnendDate.get(i).getSymbol());
@@ -245,15 +260,14 @@ public class PortfolioManagerApplication {
         lineNumberFromTestFileInStackTrace});
   }
 
-
   public static void main(String[] args) throws Exception {
     Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler());
     ThreadContext.put("runId", UUID.randomUUID().toString());
 
 
 
-    printJsonObject(mainCalculateSingleReturn(args));
 
+    printJsonObject(mainCalculateReturnsAfterRefactor(args));
   }
 }
 
