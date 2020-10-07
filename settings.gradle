@@ -1,3 +1,4 @@
+
 pluginManagement {
     repositories {
         maven { url 'https://repo.spring.io/milestone' }
@@ -12,6 +13,5 @@ pluginManagement {
         }
     }
 }
-
 include 'qmoney'
-rootProject.name = 'ME_QMONEY_MODULE_REFACTOR'
+rootProject.name = 'ME_QMONEY'

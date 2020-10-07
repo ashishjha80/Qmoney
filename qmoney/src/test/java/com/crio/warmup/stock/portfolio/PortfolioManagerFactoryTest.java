@@ -14,8 +14,6 @@ class PortfolioManagerFactoryTest {
   @Mock
   private RestTemplate restTemplate;
 
-
-
   @Test
   void getPortfolioManager() {
     Assertions.assertTrue(PortfolioManagerFactory.getPortfolioManager(restTemplate)
