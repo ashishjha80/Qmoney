@@ -13,6 +13,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+//import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -22,7 +23,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+//import java.util.logging.Level;
 import java.util.logging.Logger;
+//import java.util.stream.Collectors;
+//import java.util.stream.Stream;
 import org.apache.logging.log4j.ThreadContext;
 import org.springframework.web.client.RestTemplate;
 
@@ -47,7 +51,8 @@ public class PortfolioManagerApplication {
     PortfolioTrade[] portfolioTrades = objectMapper.readValue(tradesFile, PortfolioTrade[].class);
     RestTemplate restTemplate = new RestTemplate();
     PortfolioManagerFactory portfolioManagerFactory = new PortfolioManagerFactory();
-    PortfolioManager portfolioManager = portfolioManagerFactory.getPortfolioManager(restTemplate);
+    PortfolioManager portfolioManager = portfolioManagerFactory.getPortfolioManager("alpha",
+            restTemplate);
     return portfolioManager.calculateAnnualizedReturn(Arrays.asList(portfolioTrades), endDate);
        
   }
