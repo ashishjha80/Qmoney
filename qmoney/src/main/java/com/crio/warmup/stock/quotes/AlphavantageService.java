@@ -35,6 +35,7 @@ public class AlphavantageService implements StockQuotesService {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new JavaTimeModule());
     String stockQuotes = restTemplate.getForObject(uri, String.class);
+    System.out.println(stockQuotes);
     AlphavantageDailyResponse response = objectMapper.readValue(stockQuotes, 
             AlphavantageDailyResponse.class);
     if (response.getCandles() == null) {
