@@ -102,8 +102,8 @@ public class PortfolioManagerImpl implements PortfolioManager {
     for (Future<AnnualizedReturn> fut: future) {
       try {
         annualizedReturns.add(fut.get());
-      } catch (InterruptedException | ExecutionException e) {
-        e.printStackTrace();
+      } catch (ExecutionException e) {
+        throw new InterruptedException();
       }
       
     }
