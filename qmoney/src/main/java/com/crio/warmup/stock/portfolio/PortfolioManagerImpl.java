@@ -21,12 +21,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-//import java.util.concurrent.ExecutionException;
-//import java.util.concurrent.ExecutorService;
-//import java.util.concurrent.Executors;
-//import java.util.concurrent.Future;
-//import java.util.concurrent.TimeUnit;
-//import java.util.stream.Collectors;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+//import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.springframework.web.client.RestTemplate;
 
 public class PortfolioManagerImpl implements PortfolioManager {
@@ -66,16 +67,52 @@ public class PortfolioManagerImpl implements PortfolioManager {
     for (PortfolioTrade trade:portfolioTrades) {
       List<Candle> collection = getStockQuote(trade.getSymbol(), trade.getPurchaseDate(), endDate);
       int n = collection.size();
-      
       Double close = collection.get(n - 1).getClose();
       annualizedReturns.add(calculateAnnualizedReturns(collection.get(n - 1).getDate(),
-              trade, collection.get(0).getOpen(), close));
-      
-          
+              trade, collection.get(0).getOpen(), close));      
     }
     Collections.sort(annualizedReturns, getComparator());
     return annualizedReturns;
   }
+
+
+  public List<AnnualizedReturn> calculateAnnualizedReturnParallel(
+      List<PortfolioTrade> portfolioTrades,
+      LocalDate endDate, int numThreads) throws InterruptedException,
+      StockQuoteServiceException {
+
+    List<Future<AnnualizedReturn>> future = new ArrayList<>();
+    ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+    for (PortfolioTrade trade:portfolioTrades) {
+      Callable<AnnualizedReturn> callableTask = () -> {
+      List<Candle> collection = getStockQuote(trade.getSymbol(), trade.getPurchaseDate(), endDate);
+      int n = collection.size();
+      
+      Double close = collection.get(n - 1).getClose();
+      return calculateAnnualizedReturns(collection.get(n - 1).getDate(),
+              trade, collection.get(0).getOpen(), close);
+      };
+      Future<AnnualizedReturn> currentFuture = executor.submit(callableTask);
+      future.add(currentFuture);
+      
+          
+    }
+    List<AnnualizedReturn> annualizedReturns = new ArrayList<>();
+
+    for (Future<AnnualizedReturn> fut: future) {
+      try {
+        annualizedReturns.add(fut.get());
+      } catch (InterruptedException | ExecutionException e) {
+        e.printStackTrace();
+      }
+      
+    }
+    executor.shutdown();
+    Collections.sort(annualizedReturns, getComparator());
+    return annualizedReturns;  
+
+  }
+
 
   private AnnualizedReturn calculateAnnualizedReturns(LocalDate endDate,
       PortfolioTrade trade, Double buyPrice, Double sellPrice) {
